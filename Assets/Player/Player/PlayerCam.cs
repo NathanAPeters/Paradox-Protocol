@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class PlayerCam : MonoBehaviour
@@ -7,18 +8,34 @@ public class PlayerCam : MonoBehaviour
     [SerializeField] Transform playerBody;
     [SerializeField] float mouseSensitivity = 2f;
     [SerializeField] float cameraHeightOffset;
+    [SerializeField] TMP_InputField inputField; // Reference to the TMP Input Field
     private float pitch = 0f;
     CharacterController controller;
+    private bool isTyping = false;
 
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
         controller = playerBody.GetComponent<CharacterController>();
+        LockCursor();
     }
 
     void Update()
     {
+        // Check if the input field is focused
+        if (inputField != null && inputField.isFocused)
+        {
+            isTyping = true;
+            UnlockCursor();
+        }
+        else if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            isTyping = false;
+            LockCursor();
+        }
+
+        // Prevent camera movement when typing
+        if (isTyping) return;
+
         // Get mouse input for pitch (up-down)
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
@@ -39,9 +56,19 @@ public class PlayerCam : MonoBehaviour
         transform.rotation = Quaternion.Euler(pitch, playerBody.eulerAngles.y, 0f);
 
         // Adjust camera position dynamically
-        CharacterController controller = playerBody.GetComponent<CharacterController>();
-        float adjustedCameraHeight = controller.height + cameraHeightOffset; // Now camera follows the height properly
-
+        float adjustedCameraHeight = controller.height + cameraHeightOffset;
         transform.position = playerBody.position + new Vector3(0, adjustedCameraHeight, 0);
+    }
+
+    void LockCursor()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    void UnlockCursor()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }
